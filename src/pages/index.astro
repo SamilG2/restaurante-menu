@@ -10,7 +10,7 @@ let productos = [];
 let error = null;
 
 try {
-  const res  = await fetch(API_URL);
+  const res  = await fetch(API_URL, { redirect: 'follow' });
   const json = await res.json();
   if (json.ok) {
     productos = json.data;
@@ -18,7 +18,7 @@ try {
     error = json.error;
   }
 } catch (e) {
-  error = "No se pudo conectar con la API. Verifica tu URL en .env";
+  error = "No se pudo cargar el menú. Intenta de nuevo más tarde.";
 }
 
 // Categorías únicas para los botones de filtro
