@@ -1,17 +1,123 @@
 ---
+import Layout from '../layouts/Layout.astro';
+import MenuCard from '../components/MenuCard.astro';
+import Cart from '../components/Cart.jsx';
 
+// ── Fetch al servidor (corre en build time, NO en el navegador) ──
+const API_URL = import.meta.env.PUBLIC_APPS_SCRIPT_URL;
+
+let productos = [];
+let error = null;
+
+try {
+  const res  = await fetch(API_URL);
+  const json = await res.json();
+  if (json.ok) {
+    productos = json.data;
+  } else {
+    error = json.error;
+  }
+} catch (e) {
+  error = "No se pudo conectar con la API. Verifica tu URL en .env";
+}
+
+// Categorías únicas para los botones de filtro
+const categorias = ['Todos', ...new Set(productos.map(p => p.categoria))];
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="Nuestro Menú">
+
+  <header class="hero">
+    <h1>Nuestro Menú</h1>
+    <p>Ingredientes frescos · Recetas tradicionales</p>
+  </header>
+
+  <main>
+
+    {/* ── Manejo de error ── */}
+    {error && (
+      <div class="error-box">
+        <strong>Error al cargar el menú:</strong> {error}
+      </div>
+    )}
+
+    {/* ── Filtros por categoría ── */}
+    <div class="filtros" id="filtros">
+      {categorias.map(cat => (
+        <button
+          class={`filtro-btn ${cat === 'Todos' ? 'active' : ''}`}
+          data-cat={cat}
+        >
+          {cat}
+        </button>
+      ))}
+    </div>
+
+    {/* ── Grid de tarjetas ── */}
+    <div class="menu-grid" id="menu-grid">
+      {productos.map(p => (
+        <MenuCard producto={p} />
+      ))}
+    </div>
+
+	{/* La isla React — client:load la hidrata al cargar la página */}
+	<Cart client:load />
+
+  </main>
+</Layout>
+
+{/* Filtros con JS vanilla — no necesita isla React */}
+<script>
+  const btns  = document.querySelectorAll('.filtro-btn');
+  const cards = document.querySelectorAll('.card');
+
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const cat = btn.dataset.cat;
+      cards.forEach(card => {
+        const visible = cat === 'Todos' || card.dataset.categoria === cat;
+        card.style.display = visible ? '' : 'none';
+      });
+    });
+  });
+</script>
+
+<style>
+  .hero {
+    text-align: center;
+    padding: 3rem 1rem 2rem;
+    background: #fff;
+    border-bottom: 0.5px solid #e8e6e0;
+  }
+  .hero h1 { font-size: 2.4rem; font-weight: 800; letter-spacing: -1px; color: #1a1a1a; }
+  .hero p  { font-size: 1rem; color: #6b6b6b; margin-top: 6px; }
+  main { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+  .filtros {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .filtro-btn {
+    font-size: 12px; font-weight: 600;
+    padding: 6px 16px; border-radius: 99px;
+    border: 0.5px solid #d0cec6;
+    background: #fff; color: #4a4a4a;
+    cursor: pointer; transition: all 0.12s;
+  }
+  .filtro-btn.active,
+  .filtro-btn:hover {
+    background: #1a1a1a; color: #fff; border-color: #1a1a1a;
+  }
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+  .error-box {
+    background: #FCEBEB; color: #A32D2D;
+    border: 0.5px solid #F09595;
+    border-radius: 8px; padding: 12px 16px;
+    margin-bottom: 1.5rem; font-size: 13px;
+  }
+</style>

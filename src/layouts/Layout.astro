@@ -1,0 +1,29 @@
+---
+// Todo lo que esté aquí corre en el SERVIDOR (build time)
+const { title = "Restaurante Menu" } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <slot />  <!-- aquí se inyecta el contenido de cada página -->
+  </body>
+</html>
+
+<style is:global>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #f8f7f4;
+    color: #1a1a1a;
+    min-height: 100vh;
+  }
+  img { max-width: 100%; display: block; }
+</style>
